@@ -1,58 +1,64 @@
-(function( $ ) {
+(function () {
 	'use strict';
 
-	/**
-	 * All of the code for your admin-facing JavaScript source
-	 * should reside in this file.
-	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
-	 */
+	document.addEventListener('DOMContentLoaded', function () {
+		var selectAll = document.querySelector('.select-all');
+		var clearAll = document.querySelector('.clear-all');
+		var messageDismiss = document.querySelector('#rwut_message .notice-dismiss');
+		var messageBox = document.querySelector('#rwut_message');
+		var submitButton = document.querySelector('#restrict_wp_form button.btn-submit');
+		var checkboxes = document.querySelectorAll('.container-checkbox input[type="checkbox"]');
 
-	$(function() {
-		$( ".select-all" ).click(function(e) {
-	        $('.container-checkbox input[type="checkbox"]').prop('checked', true);
-	    });
+		function setCheckboxState(checked) {
+			checkboxes.forEach(function (checkbox) {
+				checkbox.checked = checked;
+			});
+		}
 
-	    $( ".clear-all" ).click(function(e) {
-	        $('.container-checkbox input[type="checkbox"]').prop('checked', false);
-	    });
-		
-		$("#rwut_message .notice-dismiss").click(function(e){
-	    	$("#rwut_message").slideDown();
-	    });
-	    setTimeout(function(){
-	    	$("#rwut_message").slideUp();
-	    }, 8000);
+		if (selectAll) {
+			selectAll.addEventListener('click', function (event) {
+				event.preventDefault();
+				setCheckboxState(true);
+			});
+		}
 
-	    $( "#restrict_wp_form button.btn-submit" ).click(function(e) {
-		    var fields = $("input[type='checkbox']").serializeArray(); 
-		    if (fields.length === 0) {
-		        alert('Please select any one Mime type!');
-		        return false;
-		    }
-			$(this).next().css({"visibility": "visible", "opacity": "1"});
-		});
+		if (clearAll) {
+			clearAll.addEventListener('click', function (event) {
+				event.preventDefault();
+				setCheckboxState(false);
+			});
+		}
+
+		if (messageDismiss && messageBox) {
+			messageDismiss.addEventListener('click', function () {
+				messageBox.style.display = 'block';
+			});
+		}
+
+		if (messageBox) {
+			setTimeout(function () {
+				messageBox.style.display = 'none';
+			}, 8000);
+		}
+
+		if (submitButton) {
+			submitButton.addEventListener('click', function (event) {
+				var form = document.getElementById('restrict_wp_form');
+				var checked = form.querySelectorAll('input[type="checkbox"]:checked');
+
+				if (checked.length === 0) {
+					event.preventDefault();
+					window.alert('Please select any one Mime type!');
+					return false;
+				}
+
+				var spinner = this.nextElementSibling;
+
+				if (spinner) {
+					spinner.style.visibility = 'visible';
+					spinner.style.opacity = '1';
+				}
+			});
+		}
 	});
-
-})( jQuery );
+})();

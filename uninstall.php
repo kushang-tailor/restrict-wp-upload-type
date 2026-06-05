@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Fired when the plugin is uninstalled.
  *
@@ -28,4 +27,11 @@
 // If uninstall not called from WordPress, then exit.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
+}
+
+if ( function_exists( 'delete_post_meta_by_key' ) ) {
+	delete_post_meta_by_key( 'rwut_check_extension_key' );
+} else {
+	global $wpdb;
+	$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => 'rwut_check_extension_key' ), array( '%s' ) );
 }

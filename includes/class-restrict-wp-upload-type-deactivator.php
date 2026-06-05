@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Fired during plugin deactivation
  *
@@ -23,14 +22,16 @@
 class Restrict_Wp_Upload_Type_Deactivator {
 
 	/**
-	 * Short Description. (use period)
+	 * Remove plugin settings stored in post meta when the plugin is deactivated.
 	 *
-	 * Long Description.
+	 * This keeps the database clean while still preserving user data until
+	 * the plugin is fully uninstalled.
 	 *
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
+		if ( function_exists( 'delete_post_meta_by_key' ) ) {
+			delete_post_meta_by_key( 'rwut_check_extension_key' );
+		}
 	}
-
 }

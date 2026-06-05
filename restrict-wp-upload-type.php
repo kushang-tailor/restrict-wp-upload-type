@@ -1,8 +1,10 @@
 <?php
 /**
  * Plugin Name:       Restrict WP Upload Type
- * Description:       Enable and Restrict the upload mime file type accross with 96 extensions.
- * Version:           1.0.3
+ * Description:       Take full control of file uploads—allow or restrict MIME types across 97 supported extensions.
+ * Version:           1.0.4
+ * Requires at least: 5.6
+ * Requires PHP:      7.4
  * Author:            Kushang Tailor
  * Author URI:        https://profiles.wordpress.org/kushang78/
  * License:           GPL-2.0+
@@ -22,7 +24,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'RESTRICT_WP_UPLOAD_TYPE_VERSION', '1.0.2' );
+define( 'RESTRICT_WP_UPLOAD_TYPE_VERSION', '1.0.4' );
 
 /**
  * The code that runs during plugin activation.
@@ -58,20 +60,19 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-restrict-wp-upload-type.ph
  * then kicking off the plugin from this point in the file does
  * not affect the page life cycle.
  *
- * @since    1.0.3
+ * @since    1.0.0
  */
 function run_restrict_wp_upload_type() {
 
 	$plugin = new Restrict_Wp_Upload_Type();
 	$plugin->run();
-
 }
 run_restrict_wp_upload_type();
 
 /**
  * Settings link.
  *
- * @param string $links - Current File name.
+ * @param array $links - Current File name.
  * @since 1.0.0
  */
 function rwut_settings_link( $links ) {
@@ -88,7 +89,7 @@ add_filter( "plugin_action_links_$plugin_name", 'rwut_settings_link' );
  * @param string $meta_key - Metakey.
  * @param string $limit - Limit.
  *
- * @since 1.0.3
+ * @since 1.0.0
  */
 function rwut_get_meta_value_by_key( $meta_key, $limit = 1 ) {
 	global $wpdb;

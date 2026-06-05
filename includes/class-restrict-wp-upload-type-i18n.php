@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Define the internationalization functionality
  *
@@ -24,8 +23,7 @@
  * @subpackage Restrict_Wp_Upload_Type/includes
  * @author     Kushang Tailor <admin@gmail.com>
  */
-class Restrict_Wp_Upload_Type_i18n {
-
+class Restrict_Wp_Upload_Type_I18n {
 
 	/**
 	 * Load the plugin text domain for translation.
@@ -39,9 +37,5 @@ class Restrict_Wp_Upload_Type_i18n {
 			false,
 			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
 		);
-
 	}
-
-
-
 }
