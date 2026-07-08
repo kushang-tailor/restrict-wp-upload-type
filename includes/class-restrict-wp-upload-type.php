@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The file that defines the core plugin class
  *
@@ -61,8 +60,7 @@ class Restrict_Wp_Upload_Type {
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
-	 * Load the dependencies, define the locale, and set the hooks for the admin area and
-	 * the public-facing side of the site.
+	 * Load the dependencies, define the locale, and set the hooks for the admin area.
 	 *
 	 * @since    1.0.0
 	 */
@@ -77,7 +75,6 @@ class Restrict_Wp_Upload_Type {
 		$this->load_dependencies();
 		$this->set_locale();
 		$this->define_admin_hooks();
-		$this->define_public_hooks();
 		$this->define_upload_hooks();
 	}
 
@@ -89,7 +86,6 @@ class Restrict_Wp_Upload_Type {
 	 * - Restrict_Wp_Upload_Type_Loader. Orchestrates the hooks of the plugin.
 	 * - Restrict_Wp_Upload_Type_I18n. Defines internationalization functionality.
 	 * - Restrict_Wp_Upload_Type_Admin. Defines all hooks for the admin area.
-	 * - Restrict_Wp_Upload_Type_Public. Defines all hooks for the public side of the site.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -106,6 +102,11 @@ class Restrict_Wp_Upload_Type {
 		require_once plugin_dir_path( __DIR__ ) . 'includes/class-restrict-wp-upload-type-loader.php';
 
 		/**
+		 * Admin settings page functions.
+		 */
+		require_once plugin_dir_path( __DIR__ ) . 'includes/restrict-wp-upload-type-settings-page.php';
+
+		/**
 		 * The class responsible for defining internationalization functionality
 		 * of the plugin.
 		 */
@@ -115,12 +116,6 @@ class Restrict_Wp_Upload_Type {
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( __DIR__ ) . 'admin/class-restrict-wp-upload-type-admin.php';
-
-		/**
-		 * The class responsible for defining all actions that occur in the public-facing
-		 * side of the site.
-		 */
-		require_once plugin_dir_path( __DIR__ ) . 'public/class-restrict-wp-upload-type-public.php';
 
 		$this->loader = new Restrict_Wp_Upload_Type_Loader();
 	}
@@ -154,21 +149,6 @@ class Restrict_Wp_Upload_Type {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-	}
-
-	/**
-	 * Register all of the hooks related to the public-facing functionality
-	 * of the plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function define_public_hooks() {
-
-		$plugin_public = new Restrict_Wp_Upload_Type_Public( $this->get_plugin_name(), $this->get_version() );
-
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 	}
 
 	/**
@@ -219,6 +199,110 @@ class Restrict_Wp_Upload_Type {
 	 */
 	private function define_upload_hooks() {
 		$this->loader->add_filter( 'upload_mimes', $this, 'restrict_wp_upload_remove_mime_types', 20, 1 );
+		$this->loader->add_filter( 'wp_handle_upload_prefilter', $this, 'restrict_wp_upload_validate_upload', 20, 1 );
+	}
+
+	/**
+	 * Validate uploads before WordPress moves the file.
+	 *
+	 * @since    1.1.0
+	 * @param    array $file Uploaded file data.
+	 * @return   array
+	 */
+	public function restrict_wp_upload_validate_upload( $file ) {
+		if ( ! empty( $file['error'] ) ) {
+			return $file;
+		}
+
+		$file_name = isset( $file['name'] ) ? sanitize_file_name( $file['name'] ) : '';
+		$extension = strtolower( pathinfo( $file_name, PATHINFO_EXTENSION ) );
+
+		if ( '' !== $extension && ! $this->rwut_is_extension_allowed( $extension ) ) {
+			$file['error'] = $this->rwut_get_blocked_type_message(
+				sprintf(
+					/* translators: %s: file extension. */
+					__( 'Upload blocked by Restrict WP Upload Type. The .%s file type is not allowed on this site.', 'restrict-wp-upload-type' ),
+					$extension
+				)
+			);
+			return $file;
+		}
+
+		if ( '' !== $extension && ! $this->rwut_is_filetype_allowed_by_mime( $file_name ) ) {
+			$file['error'] = $this->rwut_get_blocked_type_message(
+				sprintf(
+					/* translators: %s: file extension. */
+					__( 'Upload blocked by Restrict WP Upload Type. The .%s file type is not currently enabled for uploads.', 'restrict-wp-upload-type' ),
+					$extension
+				)
+			);
+			return $file;
+		}
+
+		$max_file_size_mb = (float) get_option( 'rwut_max_file_size_mb', 0 );
+		$max_file_size    = $max_file_size_mb > 0 ? $max_file_size_mb * MB_IN_BYTES : 0;
+
+		if ( $max_file_size > 0 && ! empty( $file['size'] ) && $file['size'] > $max_file_size ) {
+			$file['error'] = sprintf(
+				/* translators: %s: maximum file size in megabytes. */
+				__( 'Upload blocked by Restrict WP Upload Type. Files must be %s MB or smaller.', 'restrict-wp-upload-type' ),
+				rtrim( rtrim( number_format_i18n( $max_file_size_mb, 2 ), '0' ), '.' )
+			);
+		}
+
+		return $file;
+	}
+
+	/**
+	 * Check if a file extension is enabled in the plugin settings.
+	 *
+	 * @since    1.1.0
+	 * @param    string $extension File extension without a leading dot.
+	 * @return   bool
+	 */
+	private function rwut_is_extension_allowed( $extension ) {
+		$check_extension = get_post_meta( 49, 'rwut_check_extension_key', true );
+
+		if ( ! is_string( $check_extension ) || '' === trim( $check_extension ) ) {
+			return false;
+		}
+
+		$check_ex_array = array_map( 'trim', explode( ',', strtolower( $check_extension ) ) );
+
+		foreach ( $check_ex_array as $allowed_extension ) {
+			if ( false !== strpos( $allowed_extension, '.' . $extension ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the customized blocked upload message.
+	 *
+	 * @since    1.1.0
+	 * @param    string $fallback Fallback message.
+	 * @return   string
+	 */
+	private function rwut_get_blocked_type_message( $fallback ) {
+		$message = trim( (string) get_option( 'rwut_block_message', '' ) );
+
+		return '' !== $message ? $message : $fallback;
+	}
+
+	/**
+	 * Check the current file name against the plugin-filtered MIME list.
+	 *
+	 * @since    1.1.0
+	 * @param    string $file_name Uploaded file name.
+	 * @return   bool
+	 */
+	private function rwut_is_filetype_allowed_by_mime( $file_name ) {
+		$allowed_mimes = $this->restrict_wp_upload_remove_mime_types( get_allowed_mime_types() );
+		$file_type     = wp_check_filetype( $file_name, $allowed_mimes );
+
+		return ! empty( $file_type['type'] );
 	}
 
 	/**

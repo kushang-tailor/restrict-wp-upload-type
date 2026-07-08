@@ -31,5 +31,4 @@ class Restrict_Wp_Upload_Type_Activator {
 	public static function activate() {
 		add_post_meta( 49, 'rwut_check_extension_key', '.jpg / .jpeg / .jpe,.png', true );
 	}
-
 }

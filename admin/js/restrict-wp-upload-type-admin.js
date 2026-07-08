@@ -8,11 +8,16 @@
 		var messageBox = document.querySelector('#rwut_message');
 		var submitButton = document.querySelector('#restrict_wp_form button.btn-submit');
 		var checkboxes = document.querySelectorAll('.container-checkbox input[type="checkbox"]');
+		var searchInput = document.getElementById('rwut-extension-search');
+		var statusFilter = document.getElementById('rwut-extension-filter');
+		var extensionItems = document.querySelectorAll('.container-checkbox');
 
 		function setCheckboxState(checked) {
 			checkboxes.forEach(function (checkbox) {
 				checkbox.checked = checked;
 			});
+
+			filterExtensions();
 		}
 
 		if (selectAll) {
@@ -31,7 +36,7 @@
 
 		if (messageDismiss && messageBox) {
 			messageDismiss.addEventListener('click', function () {
-				messageBox.style.display = 'block';
+				messageBox.style.display = 'none';
 			});
 		}
 
@@ -41,17 +46,36 @@
 			}, 8000);
 		}
 
+		function filterExtensions() {
+			var query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+			var status = statusFilter ? statusFilter.value : 'all';
+
+			extensionItems.forEach(function (item) {
+				var text = item.getAttribute('data-extension') || item.textContent.toLowerCase();
+				var checkbox = item.querySelector('input[type="checkbox"]');
+				var matchesSearch = !query || text.indexOf(query) !== -1;
+				var matchesStatus = status === 'all' ||
+					(status === 'enabled' && checkbox && checkbox.checked) ||
+					(status === 'disabled' && checkbox && !checkbox.checked);
+
+				item.style.display = matchesSearch && matchesStatus ? '' : 'none';
+			});
+		}
+
+		if (searchInput) {
+			searchInput.addEventListener('input', filterExtensions);
+		}
+
+		if (statusFilter) {
+			statusFilter.addEventListener('change', filterExtensions);
+		}
+
+		checkboxes.forEach(function (checkbox) {
+			checkbox.addEventListener('change', filterExtensions);
+		});
+
 		if (submitButton) {
-			submitButton.addEventListener('click', function (event) {
-				var form = document.getElementById('restrict_wp_form');
-				var checked = form.querySelectorAll('input[type="checkbox"]:checked');
-
-				if (checked.length === 0) {
-					event.preventDefault();
-					window.alert('Please select any one Mime type!');
-					return false;
-				}
-
+			submitButton.addEventListener('click', function () {
 				var spinner = this.nextElementSibling;
 
 				if (spinner) {

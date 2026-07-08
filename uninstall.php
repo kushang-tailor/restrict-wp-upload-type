@@ -29,9 +29,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-if ( function_exists( 'delete_post_meta_by_key' ) ) {
-	delete_post_meta_by_key( 'rwut_check_extension_key' );
-} else {
-	global $wpdb;
-	$wpdb->delete( $wpdb->postmeta, array( 'meta_key' => 'rwut_check_extension_key' ), array( '%s' ) );
-}
+delete_post_meta_by_key( 'rwut_check_extension_key' );
+
+delete_option( 'rwut_max_file_size_mb' );
+delete_option( 'rwut_block_message' );

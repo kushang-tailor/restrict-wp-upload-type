@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Restrict WP Upload Type
  * Description:       Take full control of file uploads—allow or restrict MIME types across 97 supported extensions.
- * Version:           1.0.4
+ * Version:           1.1.0
  * Requires at least: 5.6
  * Requires PHP:      7.4
  * Author:            Kushang Tailor
@@ -11,6 +11,8 @@
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       restrict-wp-upload-type
  * Domain Path:       /languages
+ *
+ * @package           Restrict_Wp_Upload_Type
  */
 
 // If this file is called directly, abort.
@@ -24,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'RESTRICT_WP_UPLOAD_TYPE_VERSION', '1.0.4' );
+define( 'RESTRICT_WP_UPLOAD_TYPE_VERSION', '1.1.0' );
 
 /**
  * The code that runs during plugin activation.
@@ -76,7 +78,7 @@ run_restrict_wp_upload_type();
  * @since 1.0.0
  */
 function rwut_settings_link( $links ) {
-	$settings_link = '<a href="admin.php?page=restrict_file_type">Settings</a>';
+	$settings_link = '<a href="upload.php?page=restrict_file_type">Settings</a>';
 	array_unshift( $links, $settings_link );
 	return $links;
 }
@@ -92,10 +94,9 @@ add_filter( "plugin_action_links_$plugin_name", 'rwut_settings_link' );
  * @since 1.0.0
  */
 function rwut_get_meta_value_by_key( $meta_key, $limit = 1 ) {
-	global $wpdb;
 	if ( 1 === $limit ) {
-		return $wpdb->get_var( $wpdb->prepare( "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = %s LIMIT 1", $meta_key ) );
-	} else {
-		return $wpdb->get_results( $wpdb->prepare( "SELECT meta_value FROM $wpdb->postmeta WHERE meta_key = %s LIMIT %d", $meta_key, $limit ) );
+		return get_post_meta( 49, $meta_key, true );
 	}
+
+	return array_slice( get_post_meta( 49, $meta_key, false ), 0, absint( $limit ) );
 }
