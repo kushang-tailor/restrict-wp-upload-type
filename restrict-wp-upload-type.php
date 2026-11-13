@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Restrict WP Upload Type
  * Description:       Take full control of file uploads—allow or restrict MIME types across 97 supported extensions.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Requires at least: 5.6
  * Requires PHP:      7.4
  * Author:            Kushang Tailor
@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'RESTRICT_WP_UPLOAD_TYPE_VERSION', '1.1.0' );
+define( 'RESTRICT_WP_UPLOAD_TYPE_VERSION', '1.1.1' );
 
 /**
  * The code that runs during plugin activation.
