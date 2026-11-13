@@ -9,7 +9,7 @@ Restrict WP Upload Type gives you complete control over which files your users c
 | Contributors | kushang78 |
 | Tags | file-type, media, mime, upload-restrictions, security |
 | Tested up to | WordPress 7.0 |
-| Stable tag | 1.1.0 |
+| Stable tag | 1.1.1 |
 | License | GPLv2 |
 | License URI | <http://www.gnu.org/licenses/gpl-2.0.html> |
 
@@ -226,6 +226,10 @@ If you would like to support development, please visit [kushang78 on WordPress.o
 
 ## Upgrade Notice
 
+### 1.1.1
+
+Preserves file type settings when the plugin is deactivated and reactivated.
+
 ### 1.1.0
 
 Adds Media menu placement, file size limits, customizable upload block messages, and extension search/filter controls.
@@ -239,6 +243,11 @@ No upgrade notice for this version.
 No upgrade notice for this version.
 
 ## Changelog
+
+### 1.1.1 - November 13, 2026
+
+- Fixed file type settings being deleted during plugin deactivation.
+- Settings are now removed only when the plugin is uninstalled.
 
 ### 1.1.0 - July 07, 2026
 
